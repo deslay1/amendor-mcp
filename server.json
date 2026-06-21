@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.deslay1/amendor-mcp",
+  "description": "Connect your coding agent to Amendor. Pulls change requests from your Amendor board into your agent so it builds them and opens pull requests.",
+  "repository": {
+    "url": "https://github.com/deslay1/amendor-mcp",
+    "source": "github"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "amendor-mcp",
+      "version": "0.1.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AMENDOR_API",
+          "description": "Your Amendor URL",
+          "isRequired": true,
+          "format": "string",
+          "default": "https://amendor.site"
+        },
+        {
+          "name": "AMENDOR_TOKEN",
+          "description": "Connector token from amendor.site/settings (generated per account)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

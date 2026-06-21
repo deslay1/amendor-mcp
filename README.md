@@ -7,15 +7,15 @@ Amendor lets the people you build for request changes right on your live site. R
 ## Setup
 
 1. Sign in at [amendor.site](https://amendor.site) and create a project.
-2. Copy your connector command from Settings:
+2. Go to Settings and copy the connector command. It already has your token filled in and looks like this:
 
    ```
-   claude mcp add amendor --env RELAY_API=https://amendor.site --env RELAY_TOKEN=your-token -- npx -y amendor-mcp
+   claude mcp add amendor --env AMENDOR_API=https://amendor.site --env AMENDOR_TOKEN=your-token -- npx -y amendor-mcp
    ```
 
 3. Run it in your repo.
 
-`RELAY_TOKEN` comes from your account, so create a project first.
+`AMENDOR_TOKEN` is the key that ties the connector to your Amendor account. You do not make it up. Amendor generates it and shows it inside the ready-made command on the Settings page, so create a project first, then copy the whole command.
 
 ## Use it
 

@@ -6,14 +6,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
-const API = process.env.RELAY_API || 'http://localhost:4000';
-const TOKEN = process.env.RELAY_TOKEN; // connector token from /settings
+const API = process.env.AMENDOR_API || process.env.RELAY_API || 'http://localhost:4000';
+const TOKEN = process.env.AMENDOR_TOKEN || process.env.RELAY_TOKEN; // connector token from amendor.site/settings
 
 async function api(path, opts = {}) {
   const headers = { ...(opts.headers || {}) };
   if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
   const r = await fetch(API + path, { ...opts, headers });
-  if (r.status === 401) throw new Error('Not authorized. Create a project at amendor.site/settings and copy your connector command (it includes RELAY_TOKEN).');
+  if (r.status === 401) throw new Error('Not authorized. Create a project at amendor.site/settings and copy your connector command (it includes AMENDOR_TOKEN).');
   if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
   return r.json();
 }
