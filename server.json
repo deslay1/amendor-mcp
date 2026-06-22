@@ -1,17 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.deslay1/amendor-mcp",
+  "title": "Amendor",
   "description": "Pull change requests from your Amendor board into your coding agent to build and open PRs.",
+  "websiteUrl": "https://amendor.site",
   "repository": {
     "url": "https://github.com/deslay1/amendor-mcp",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.1.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "amendor-mcp",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "transport": {
         "type": "stdio"
       },
@@ -28,6 +30,20 @@
           "description": "Connector token from amendor.site/settings (generated per account)",
           "isRequired": true,
           "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://amendor.site/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer <connector token from amendor.site/settings>",
+          "isRequired": true,
           "isSecret": true
         }
       ]
