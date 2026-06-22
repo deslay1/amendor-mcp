@@ -1,5 +1,7 @@
 # amendor-mcp
 
+[![amendor-mcp MCP server](https://glama.ai/mcp/servers/deslay1/amendor-mcp/badges/score.svg)](https://glama.ai/mcp/servers/deslay1/amendor-mcp)
+
 Connect your coding agent to [Amendor](https://amendor.site).
 
 Amendor lets the people you build for request changes right on your live site. Requests land on a board. This connector pulls them into your agent (Claude Code, Cursor, Cline, Codex, any MCP client) so it can build each one on a branch and open a pull request.
