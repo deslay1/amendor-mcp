@@ -1,6 +1,6 @@
 {
   "name": "amendor-mcp",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "mcpName": "io.github.deslay1/amendor-mcp",
   "description": "Amendor connector for MCP-capable coding agents. Pulls change requests from your Amendor board into your agent so it can build them and open pull requests.",
   "type": "module",

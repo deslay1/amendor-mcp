@@ -21,7 +21,7 @@ async function api(path, opts = {}) {
 
 const STATUS = 'new, accepted, building, preview, approved, shipped, or rejected';
 
-const server = new McpServer({ name: 'amendor', version: '0.1.3' });
+const server = new McpServer({ name: 'amendor', version: '1.0.0' });
 
 server.registerTool(
   'list_change_requests',
