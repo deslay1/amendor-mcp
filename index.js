@@ -21,6 +21,9 @@ async function api(path, opts = {}) {
 
 const STATUS = 'new, accepted, building, preview, approved, shipped, or rejected';
 
+// "RB-3" for display; falls back to the raw id for rows predating ticket codes
+const codeOf = (t) => (t && t.project_code && t.seq ? `${t.project_code}-${t.seq}` : (t ? t.id : ''));
+
 const server = new McpServer({ name: 'amendor', version: '1.0.0' });
 
 server.registerTool(
@@ -33,19 +36,20 @@ server.registerTool(
     },
     outputSchema: {
       requests: z.array(z.object({
-        id: z.string().describe('Change request id; pass to get_change_request.'),
+        code: z.string().describe('Short ticket code like "RB-3"; pass to get_change_request.'),
         status: z.string().describe('Current status of the request.'),
         request_text: z.string().describe('What the user asked for, in their own words.'),
         page_url: z.string().describe('URL of the page the request was made on.'),
+        project: z.string().describe('Project the request belongs to.'),
       })).describe('Matching change requests, newest first.'),
     },
     annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true, destructiveHint: false },
   },
   async ({ status }) => {
     const tasks = await api('/api/tasks' + (status ? `?status=${encodeURIComponent(status)}` : ''));
-    const requests = tasks.map((t) => ({ id: t.id, status: t.status, request_text: t.request_text, page_url: t.page_url || '' }));
+    const requests = tasks.map((t) => ({ code: codeOf(t), status: t.status, request_text: t.request_text, page_url: t.page_url || '', project: t.project_name || '' }));
     const text = requests.length
-      ? requests.map((t) => `• [${t.id}] (${t.status}) "${t.request_text}"\n    page: ${t.page_url}`).join('\n')
+      ? requests.map((t) => `• [${t.code}] (${t.status}) "${t.request_text}"\n    page: ${t.page_url}`).join('\n')
       : 'No change requests found.';
     return { content: [{ type: 'text', text }], structuredContent: { requests } };
   }
@@ -57,10 +61,11 @@ server.registerTool(
     title: 'Get change request',
     description: 'Get full detail for one change request so you can implement it: the user request, the exact element they pointed at (CSS selector + outerHTML), the page URL, and a screenshot URL. Call this before making the change.',
     inputSchema: {
-      id: z.string().describe('Change request id, from list_change_requests.'),
+      id: z.string().describe('Ticket code like "RB-3" from list_change_requests (raw ids also work).'),
     },
     outputSchema: {
-      id: z.string().describe('Change request id.'),
+      code: z.string().describe('Short ticket code.'),
+      id: z.string().describe('Raw change request id (used in branch names and PR tags).'),
       status: z.string().describe('Current status.'),
       page_url: z.string().describe('URL of the page the request was made on.'),
       requested_by: z.string().describe('Requester email, or "anonymous".'),
@@ -86,7 +91,7 @@ server.registerTool(
       ? els.map((e, i) => `  [${i + 1}] selector: ${e.selector}\n      html: ${e.html || '(n/a)'}`).join('\n')
       : '  (none — general request, not tied to a specific element)';
     const text = [
-      `CHANGE REQUEST ${t.id}  (status: ${t.status})`,
+      `CHANGE REQUEST ${codeOf(t)}  (status: ${t.status})`,
       `Page:         ${t.page_url}`,
       `Requested by: ${t.requester_email || 'anonymous'}`,
       ``,
@@ -111,6 +116,7 @@ server.registerTool(
       `then call set_preview_url with the deploy-preview link.`,
     ].join('\n');
     const structuredContent = {
+      code: codeOf(t),
       id: t.id,
       status: t.status,
       page_url: t.page_url || '',
@@ -132,24 +138,24 @@ server.registerTool(
     title: 'Attach preview URL',
     description: 'Attach a deploy-preview URL to a change request and mark it ready for the requester to review.',
     inputSchema: {
-      id: z.string().describe('Change request id.'),
+      id: z.string().describe('Ticket code like "RB-3" (raw ids also work).'),
       url: z.string().describe('Deploy-preview URL (from your host) that the requester will review.'),
     },
     outputSchema: {
-      id: z.string().describe('Change request id.'),
+      code: z.string().describe('Short ticket code.'),
       status: z.string().describe('New status, set to "preview".'),
       review_url: z.string().describe('Page where the requester reviews and approves the change.'),
     },
     annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true, destructiveHint: false },
   },
   async ({ id, url }) => {
-    await api('/api/tasks/' + id, {
+    const t = await api('/api/tasks/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ preview_url: url, status: 'preview' }),
     });
-    const review_url = `${API}/t/${id}`;
-    return { content: [{ type: 'text', text: `Preview attached. Requester reviews at ${review_url}` }], structuredContent: { id, status: 'preview', review_url } };
+    const review_url = `${API}/t/${t.id}`;
+    return { content: [{ type: 'text', text: `Preview attached. Requester reviews at ${review_url}` }], structuredContent: { code: codeOf(t), status: 'preview', review_url } };
   }
 );
 
@@ -159,22 +165,22 @@ server.registerTool(
     title: 'Update status',
     description: 'Update a change request status as it moves through the build and review flow.',
     inputSchema: {
-      id: z.string().describe('Change request id.'),
+      id: z.string().describe('Ticket code like "RB-3" (raw ids also work).'),
       status: z.string().describe(`New status: ${STATUS}.`),
     },
     outputSchema: {
-      id: z.string().describe('Change request id.'),
+      code: z.string().describe('Short ticket code.'),
       status: z.string().describe('The status now set on the request.'),
     },
     annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true, destructiveHint: false },
   },
   async ({ id, status }) => {
-    await api('/api/tasks/' + id, {
+    const t = await api('/api/tasks/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     });
-    return { content: [{ type: 'text', text: `Status → ${status}` }], structuredContent: { id, status } };
+    return { content: [{ type: 'text', text: `Status set to ${status}` }], structuredContent: { code: codeOf(t), status } };
   }
 );
 
@@ -184,7 +190,7 @@ server.registerTool(
     title: 'Start local build',
     description: 'LOCAL MODE ONLY (repo on this machine, no host). Cuts a branch + git worktree the local Amendor serves at /preview/<id>/. For the normal GitHub flow, do NOT call this: instead branch "relay/task-<id>" in your own repo clone, edit, commit, push, and open a PR tagged "relay-task:<id>" — the host builds the preview and the webhook captures it automatically.',
     inputSchema: {
-      id: z.string().describe('Change request id to start a local build for.'),
+      id: z.string().describe('Ticket code like "RB-3" or raw id to start a local build for.'),
     },
     outputSchema: {
       id: z.string().describe('Change request id.'),
@@ -217,7 +223,7 @@ server.registerTool(
     title: 'Publish preview',
     description: 'Mark a change request ready for the requester to review. The preview is already live from the worktree; this flips status to "in preview" and surfaces the link.',
     inputSchema: {
-      id: z.string().describe('Change request id whose local preview is ready.'),
+      id: z.string().describe('Ticket code like "RB-3" or raw id whose local preview is ready.'),
     },
     outputSchema: {
       id: z.string().describe('Change request id.'),
@@ -227,9 +233,9 @@ server.registerTool(
     annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true, destructiveHint: false },
   },
   async ({ id }) => {
-    await api('/api/tasks/' + id + '/publish', { method: 'POST' });
-    const review_url = `${API}/t/${id}`;
-    return { content: [{ type: 'text', text: `Published. Requester reviews at ${review_url}` }], structuredContent: { id, status: 'preview', review_url } };
+    const t = await api('/api/tasks/' + id + '/publish', { method: 'POST' });
+    const review_url = `${API}/t/${t.id}`;
+    return { content: [{ type: 'text', text: `Published. Requester reviews at ${review_url}` }], structuredContent: { id: t.id, status: 'preview', review_url } };
   }
 );
 
@@ -239,7 +245,7 @@ server.registerTool(
     title: 'Ship change',
     description: 'Ship an approved change: merge the task branch into the project base, remove the worktree, and mark it shipped. Production (the live site) now reflects the change.',
     inputSchema: {
-      id: z.string().describe('Change request id to ship (should be approved first).'),
+      id: z.string().describe('Ticket code like "RB-3" or raw id to ship (should be approved first).'),
     },
     outputSchema: {
       id: z.string().describe('Change request id.'),
