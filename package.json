@@ -1,6 +1,6 @@
 {
   "name": "amendor-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "mcpName": "io.github.deslay1/amendor-mcp",
   "description": "Amendor connector for MCP-capable coding agents. Pulls change requests from your Amendor board into your agent so it can build them and open pull requests.",
   "type": "module",
@@ -30,8 +30,13 @@
   ],
   "license": "MIT",
   "homepage": "https://amendor.site",
-  "repository": { "type": "git", "url": "git+https://github.com/deslay1/amendor-mcp.git" },
-  "bugs": { "url": "https://github.com/deslay1/amendor-mcp/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deslay1/amendor-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deslay1/amendor-mcp/issues"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.23.8"
