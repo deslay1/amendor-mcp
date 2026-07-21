@@ -1,5 +1,6 @@
 # amendor-mcp
 
+[![Featured on Product Hunt](https://img.shields.io/badge/Product%20Hunt-Featured-da552f?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/amendor/amendor/launch-day)
 [![amendor-mcp MCP server](https://glama.ai/mcp/servers/deslay1/amendor-mcp/badges/score.svg)](https://glama.ai/mcp/servers/deslay1/amendor-mcp)
 
 Connect your coding agent to [Amendor](https://amendor.site).
